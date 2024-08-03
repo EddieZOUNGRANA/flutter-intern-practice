@@ -7,13 +7,44 @@ environment:
   sdk: '>=3.2.3 <4.0.0'
 
 dependencies:
+  dynamic_color: ^1.7.0
   flutter:
     sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  flutter_easyloading: ^3.0.5
+  flutter_local_notifications: ^17.2.1+2
+  flutter_timezone: ^2.1.0
+  get: ^4.6.6
+  google_fonts: ^6.2.1
+  time_machine: ^0.9.17
+  timezone: ^0.9.4
+  firebase_core: ^2.24.2
+  firebase_ui_auth: ^1.13.0
 
 dev_dependencies:
   flutter_test:
     sdk: flutter
-  flutter_lints: ^2.0.0
+  flutter_lints: ^4.0.0
+  flutter_native_splash: ^2.4.1
+  flutter_launcher_icons: ^0.13.1
 
 flutter:
   uses-material-design: true
+
+  assets:
+    - assets/icons/
+
+flutter_launcher_icons:
+  android: "launcher_icon"
+  ios: true
+  image_path: "assets/icons/icon.png"
+  adaptive_icon_background: "#000000"
+  adaptive_icon_foreground: "assets/icons/icon.png"
+
+flutter_native_splash:
+  color: "#000000"
+  android_12:
+    color: "#000000"
+  image: "assets/icons/icon.png"
+
