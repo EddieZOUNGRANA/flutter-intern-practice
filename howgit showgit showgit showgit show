@@ -1,0 +1,18 @@
+[33mcommit a98bb848692955b5f30cab2d81d1ccb165f65b40[m[33m ([m[1;36mHEAD -> [m[1;32mfeature/main[m[33m)[m
+Author: eddyzoungrana72 <eddyzoungrana72@gmail.com>
+Date:   Sat Aug 3 22:02:44 2024 +0000
+
+    ajout icon, splash, auth
+
+[1mdiff --git a/.gitignore b/.gitignore[m
+[1mindex 29a3a50..d7b4f82 100644[m
+[1m--- a/.gitignore[m
+[1m+++ b/.gitignore[m
+[36m@@ -25,6 +25,7 @@[m [mmigrate_working_dir/[m
+ **/doc/api/[m
+ **/ios/Flutter/.last_build_id[m
+ .dart_tool/[m
+[32m+[m[32m.idx/[m
+ .flutter-plugins[m
+ .flutter-plugins-dependencies[m
+ .pub-cache/[m

@@ -4,14 +4,17 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_ui_auth/firebase_ui_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter_displaymode/flutter_displaymode.dart';
 import 'package:flutter_easyloading/flutter_easyloading.dart';
 import 'package:flutter_local_notifications/flutter_local_notifications.dart';
 import 'package:flutter_localizations/flutter_localizations.dart';
 import 'package:flutter_timezone/flutter_timezone.dart';
 import 'package:get/get.dart';
-import 'package:task_manager/app/widgets/home.dart';
+import 'package:task_manager/app/appwidgets/home.dart';
+import 'package:task_manager/app/utils/device_info.dart';
 import 'package:task_manager/firebase_options.dart';
 import 'package:task_manager/theme/theme.dart';
+import 'package:task_manager/theme/theme_controller.dart';
 import 'package:time_machine/time_machine.dart';
 import 'dart:io';
 import 'package:timezone/data/latest_all.dart' as tz;
@@ -20,18 +23,22 @@ import 'package:timezone/timezone.dart' as tz;
 FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
     FlutterLocalNotificationsPlugin();
 
+final providers = [EmailAuthProvider()];
 bool amoledTheme = false;
 bool materialColor = true;
-Locale locale = const Locale('en', 'US');
+String timeformat = '24';
+String firstDaySelect = 'monday';
+Locale locale = const Locale('fr', 'CA');
 
 void main() async {
   final String timeZoneName;
 
   WidgetsFlutterBinding.ensureInitialized();
-  SystemChrome.setSystemUIOverlayStyle(
-    const SystemUiOverlayStyle(systemNavigationBarColor: Colors.black),
-  );
+  DeviceFeature().init();
 
+   if (Platform.isAndroid) {
+    await setOptimalDisplayMode();
+  }
   if (Platform.isAndroid || Platform.isIOS) {
     timeZoneName = await FlutterTimezone.getLocalTimezone();
   } else {
@@ -53,6 +60,20 @@ void main() async {
   runApp(const MainApp());
 }
 
+Future<void> setOptimalDisplayMode() async {
+  final List<DisplayMode> supported = await FlutterDisplayMode.supported;
+  final DisplayMode active = await FlutterDisplayMode.active;
+  final List<DisplayMode> sameResolution = supported
+      .where((DisplayMode m) =>
+          m.width == active.width && m.height == active.height)
+      .toList()
+    ..sort((DisplayMode a, DisplayMode b) =>
+        b.refreshRate.compareTo(a.refreshRate));
+  final DisplayMode mostOptimalMode =
+      sameResolution.isNotEmpty ? sameResolution.first : active;
+  await FlutterDisplayMode.setPreferredMode(mostOptimalMode);
+}
+
 class MainApp extends StatefulWidget {
   const MainApp({super.key});
 
@@ -61,50 +82,66 @@ class MainApp extends StatefulWidget {
 }
 
 class _MyAppState extends State<MainApp> {
-  final themeController = ThemeMode.dark;
+  final themeController = Get.put(ThemeController());
+  
+  @override
+  void initState() {
+    amoledTheme = amoledTheme;
+    materialColor = materialColor;
+    timeformat = timeformat;
+    firstDaySelect = firstDaySelect;
+    locale = locale;
+    super.initState();
+  }
 
   @override
   Widget build(BuildContext context) {
-    final providers = [EmailAuthProvider()];
+    final edgeToEdgeAvailable = DeviceFeature().isEdgeToEdgeAvailable();
+    SystemChrome.setEnabledSystemUIMode(SystemUiMode.edgeToEdge);
 
     return GestureDetector(
       onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
       child: DynamicColorBuilder(
         builder: (lightColorTheme, darkColorTheme) {
-          final lightMaterialTheme =
-              lightTheme(lightColorTheme?.surface, lightColorTheme);
-          final darkMaterialTheme =
-              darkTheme(darkColorTheme?.surface, darkColorTheme);
-          final darkMaterialThemeOled = darkTheme(oledColor, darkColorTheme);
+          final lightMaterialTheme = lightTheme(
+              lightColorTheme?.surface, lightColorTheme, edgeToEdgeAvailable);
+          final darkMaterialTheme = darkTheme(
+              darkColorTheme?.surface, darkColorTheme, edgeToEdgeAvailable);
+          final darkMaterialThemeOled =
+              darkTheme(oledColor, darkColorTheme, edgeToEdgeAvailable);
 
           return GetMaterialApp(
             theme: materialColor
                 ? lightColorTheme != null
                     ? lightMaterialTheme
-                    : lightTheme(lightColor, colorSchemeLight)
-                : lightTheme(lightColor, colorSchemeLight),
+                    : lightTheme(
+                        lightColor, colorSchemeLight, edgeToEdgeAvailable)
+                : lightTheme(lightColor, colorSchemeLight, edgeToEdgeAvailable),
             darkTheme: amoledTheme
                 ? materialColor
                     ? darkColorTheme != null
                         ? darkMaterialThemeOled
-                        : darkTheme(oledColor, colorSchemeDark)
-                    : darkTheme(oledColor, colorSchemeDark)
+                        : darkTheme(
+                            oledColor, colorSchemeDark, edgeToEdgeAvailable)
+                    : darkTheme(oledColor, colorSchemeDark, edgeToEdgeAvailable)
                 : materialColor
                     ? darkColorTheme != null
                         ? darkMaterialTheme
-                        : darkTheme(darkColor, colorSchemeDark)
-                    : darkTheme(darkColor, colorSchemeDark),
-            themeMode: themeController,
+                        : darkTheme(
+                            darkColor, colorSchemeDark, edgeToEdgeAvailable)
+                    : darkTheme(
+                        darkColor, colorSchemeDark, edgeToEdgeAvailable),
+            themeMode: themeController.theme,
             localizationsDelegates: const [
               GlobalMaterialLocalizations.delegate,
               GlobalWidgetsLocalizations.delegate,
               GlobalCupertinoLocalizations.delegate,
             ],
             locale: locale,
-            fallbackLocale: const Locale('en', 'US'),
+            fallbackLocale: const Locale('fr', 'CA'),
             supportedLocales: const [
-              Locale('en', 'US'),
-              Locale('fr', 'FR'),
+              Locale('en', 'CA'),
+              Locale('fr', 'CA'),
             ],
             debugShowCheckedModeBanner: false,
             initialRoute: FirebaseAuth.instance.currentUser == null

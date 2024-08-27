@@ -1,31 +1,39 @@
-// import 'package:get/get.dart';
-// import 'package:flutter/material.dart';
-// import 'package:todark/app/data/schema.dart';
-// import 'package:todark/main.dart';
+import 'package:get/get.dart';
+import 'package:flutter/material.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 
-// class ThemeController extends GetxController {
-//   ThemeMode get theme => settings.theme == 'system'
-//       ? ThemeMode.system
-//       : settings.theme == 'dark'
-//           ? ThemeMode.dark
-//           : ThemeMode.light;
+class ThemeController extends GetxController {
+  late Box _box;
+  final themeapp = ''.obs;
 
-//   void saveOledTheme(bool isOled) {
-//     settings.amoledTheme = isOled;
-//     isar.writeTxnSync(() => isar.settings.putSync(settings));
-//   }
+  ThemeMode get theme => themeapp.value == 'system'
+      ? ThemeMode.system
+      : themeapp.value == 'dark'
+          ? ThemeMode.dark
+          : ThemeMode.light;
 
-//   void saveMaterialTheme(bool isMaterial) {
-//     settings.materialColor = isMaterial;
-//     isar.writeTxnSync(() => isar.settings.putSync(settings));
-//   }
+  @override
+  void onInit() async {
+    super.onInit();
+    await _initHive();
+    loadTheme();
+  }
 
-//   void saveTheme(String themeMode) {
-//     settings.theme = themeMode;
-//     isar.writeTxnSync(() => isar.settings.putSync(settings));
-//   }
+  Future<void> saveTheme(String themeMode) async {
+    themeapp.value = themeMode;
+    await _box.put('theme', themeMode); 
+  }
 
-//   void changeTheme(ThemeData theme) => Get.changeTheme(theme);
+  void loadTheme() {
+    themeapp.value = _box.get('theme') ?? 'system'; 
+  }
 
-//   void changeThemeMode(ThemeMode themeMode) => Get.changeThemeMode(themeMode);
-// }
+  Future<void> _initHive() async {
+    await Hive.initFlutter();
+    _box = await Hive.openBox('theme'); 
+  }
+
+  void changeTheme(ThemeData theme) => Get.changeTheme(theme);
+
+  void changeThemeMode(ThemeMode themeMode) => Get.changeThemeMode(themeMode);
+}
